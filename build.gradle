@@ -109,7 +109,7 @@ generateGrammarSource {
 sourceSets {
     main {
         antlr {
-            srcDirs = ['src/main/antlr/org/flowdigger/parsers']
+            srcDirs = ['src/main/antlr/name/jurgenei/parsers']
             include 'SasLexer.g4'
             include 'SasParser.g4'
             include 'CaslLexer.g4'
