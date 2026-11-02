@@ -1,22 +1,32 @@
+import java.security.MessageDigest
+
 plugins {
     id 'java'
     id 'antlr'
     id 'java-gradle-plugin'
-    id 'com.gradle.plugin-publish' version '2.1.1'
     id 'jacoco'
-    id 'name.jurgenei.gradle.antlr'
+    id 'org.flowdigger.gradle.antlr'
+    id 'maven-publish'
+    id 'signing'
+    id 'org.owasp.dependencycheck' version '10.0.3'
+    id 'com.github.spotbugs' version '6.1.0'
 }
 
-group = 'name.jurgenei.gradle'
-version = '0.1.2'
+group = 'org.flowdigger.gradle'
+version = '1.0.0'
+
+ext {
+    spotbugsEngineVersion = '4.8.6'
+    findSecBugsVersion = '1.13.0'
+}
 
 gradlePlugin {
     plugins {
-        website = 'https://github.com/jurgenei/gradle-antlr-sas-plugin'
-        vcsUrl = 'https://github.com/jurgenei/gradle-antlr-sas-plugin'
+        website = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
+        vcsUrl = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
         sasGrammar {
-            id = 'name.jurgenei.gradle.antlr.sas'
-            implementationClass = 'name.jurgenei.gradle.antlr.SasGrammarPlugin'
+            id = 'org.flowdigger.gradle.antlr.sas'
+            implementationClass = 'org.flowdigger.gradle.antlr.SasGrammarPlugin'
             displayName = 'Gradle ANTLR SAS Plugin'
             description = 'Proof-of-concept SAS macro expansion and XML AST generation plugin.'
             tags.set(['antlr', 'sas', 'xml', 'ast', 'macro'])
@@ -29,22 +39,23 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
     withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
     mavenCentral()
-    gradlePluginPortal()
     mavenLocal()
 }
 
 dependencies {
-    implementation 'name.jurgenei.gradle:gradle-antlr-plugin:0.1.7'
+    implementation 'org.flowdigger.gradle:gradle-antlr-plugin:1.0.0'
     implementation 'org.antlr:antlr4-runtime:4.13.2'
 
     antlr 'org.antlr:antlr4:4.13.2'
 
     testImplementation gradleTestKit()
     testImplementation 'junit:junit:4.13.2'
+    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findSecBugsVersion}"
 }
 
 publishing {
@@ -55,7 +66,7 @@ publishing {
             pom {
                 name = 'Gradle ANTLR SAS Plugin'
                 description = 'Gradle plugin for XML AST conversion of SAS sources'
-                url = 'https://github.com/jurgenei/gradle-antlr-sas-plugin'
+                url = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
 
                 licenses {
                     license {
@@ -66,15 +77,15 @@ publishing {
 
                 developers {
                     developer {
-                        id = 'jurgenei'
-                        name = 'Jurgen Hildebrand'
+                        id = 'flowdigger'
+                        name = 'Flowdigger'
                     }
                 }
 
                 scm {
-                    connection = 'scm:git:https://github.com/jurgenei/gradle-antlr-sas-plugin.git'
-                    developerConnection = 'scm:git:ssh://git@github.com/jurgenei/gradle-antlr-sas-plugin.git'
-                    url = 'https://github.com/jurgenei/gradle-antlr-sas-plugin'
+                    connection = 'scm:git:https://github.com/flowdigger/gradle-antlr-sas-plugin.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/flowdigger/gradle-antlr-sas-plugin.git'
+                    url = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
                 }
             }
         }
@@ -82,7 +93,60 @@ publishing {
 
     repositories {
         mavenLocal()
+        maven {
+            name = 'sonatype'
+            def releasesRepoUrl = 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
+            def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+            url = uri(version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl)
+            credentials {
+                username = providers.gradleProperty('mavenCentralUsername').orNull
+                password = providers.gradleProperty('mavenCentralPassword').orNull
+            }
+        }
     }
+}
+
+signing {
+    def signingKey = providers.gradleProperty('signingKey').orNull
+    def signingPassword = providers.gradleProperty('signingPassword').orNull
+    def signingKeyId = providers.gradleProperty('signingKeyId').orNull
+    if (signingKey && signingPassword) {
+        if (signingKeyId) {
+            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+        } else {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
+    } else {
+        useGpgCmd()
+    }
+    sign publishing.publications.mavenJava
+}
+
+dependencyCheck {
+    format = 'HTML,JSON,XML'
+    failBuildOnCVSS = 7.0
+    suppressionFile = 'dependency-check-suppressions.xml'
+    nvd {
+        apiKey = findProperty('org.owasp.dependencycheck.nvd.api.key') ?: System.getenv('NVD_API_KEY')
+    }
+}
+
+spotbugs {
+    toolVersion = spotbugsEngineVersion
+    ignoreFailures = true
+    effort = com.github.spotbugs.snom.Effort.valueOf('DEFAULT')
+    reportLevel = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        html.required = true
+        xml.required = false
+    }
+}
+
+tasks.matching { it.name == 'spotbugsTest' }.configureEach {
+    enabled = false
 }
 
 generateGrammarSource {
@@ -92,7 +156,7 @@ generateGrammarSource {
 sourceSets {
     main {
         antlr {
-            srcDirs = ['src/main/antlr/name/jurgenei/parsers']
+            srcDirs = ['src/main/antlr/org/flowdigger/parsers']
             include 'SasLexer.g4'
             include 'SasParser.g4'
             include 'CaslLexer.g4'
@@ -135,6 +199,12 @@ tasks.named('jacocoTestReport') {
     }
 }
 
+tasks.register('coverage') {
+    group = 'verification'
+    description = 'Runs tests, generates JaCoCo report, and verifies minimum coverage threshold.'
+    dependsOn tasks.named('jacocoTestReport')
+}
+
 tasks.register('verifySampleSas', Exec) {
     group = 'verification'
     description = 'Runs SAS sample macro and XML AST tasks.'
@@ -166,4 +236,56 @@ tasks.register('verifySamples') {
 
 tasks.named('check') {
     dependsOn tasks.named('jacocoTestReport')
+}
+
+def centralArtifactId = (project.findProperty('mavenArtifactId') ?: project.name).toString()
+def centralGroupPath = project.group.toString().replace('.', '/')
+
+def stageCentralBundleRepo = tasks.register('stageCentralBundleRepo', Sync) {
+    dependsOn tasks.named('publishToMavenLocal')
+    def artifactVersionDir = file("${System.getProperty('user.home')}/.m2/repository/${centralGroupPath}/${centralArtifactId}/${project.version}")
+    from(artifactVersionDir)
+    into(layout.buildDirectory.dir("central-staging-repo/${centralGroupPath}/${centralArtifactId}/${project.version}"))
+    doFirst {
+        if (!artifactVersionDir.exists()) {
+            throw new GradleException("Expected local Maven artifact version directory not found: ${artifactVersionDir}")
+        }
+    }
+}
+
+def generateCentralBundleChecksums = tasks.register('generateCentralBundleChecksums') {
+    dependsOn stageCentralBundleRepo
+    notCompatibleWithConfigurationCache('Generates checksum files by scanning staged output directory at execution time.')
+    doLast {
+        def stagedVersionDir = layout.buildDirectory.dir("central-staging-repo/${centralGroupPath}/${centralArtifactId}/${project.version}").get().asFile
+        if (!stagedVersionDir.exists()) {
+            throw new GradleException("Expected staged version directory not found: ${stagedVersionDir}")
+        }
+        def checksum = { File input, String algorithm ->
+            MessageDigest digest = MessageDigest.getInstance(algorithm)
+            input.withInputStream { stream ->
+                byte[] buffer = new byte[8192]
+                int read
+                while ((read = stream.read(buffer)) >= 0) {
+                    digest.update(buffer, 0, read)
+                }
+            }
+            digest.digest().collect { String.format('%02x', it & 0xff) }.join('')
+        }
+        stagedVersionDir.eachFileRecurse { file ->
+            if (file.isFile() && !file.name.endsWith('.md5') && !file.name.endsWith('.sha1')) {
+                file.parentFile.toPath().resolve(file.name + '.md5').toFile().text = checksum(file, 'MD5') + System.lineSeparator()
+                file.parentFile.toPath().resolve(file.name + '.sha1').toFile().text = checksum(file, 'SHA-1') + System.lineSeparator()
+            }
+        }
+    }
+}
+
+tasks.register('packageCentralBundle', Zip) {
+    dependsOn generateCentralBundleChecksums
+    archiveBaseName = project.name
+    archiveVersion = project.version.toString()
+    archiveClassifier = 'central-bundle'
+    destinationDirectory = layout.buildDirectory.dir('central-bundle').get().asFile
+    from layout.buildDirectory.dir('central-staging-repo')
 }
