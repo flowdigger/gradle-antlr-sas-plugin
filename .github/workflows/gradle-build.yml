@@ -40,7 +40,7 @@ jobs:
             exit 0
           fi
 
-          git clone --depth 1 "https://github.com/jurgenei/gradle-antlr-plugin.git" "$ROOT_PARENT/gradle-antlr-plugin"
+          git clone --depth 1 "https://github.com/flowdigger/gradle-antlr-plugin.git" "$ROOT_PARENT/gradle-antlr-plugin"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -54,5 +54,5 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: jurgenei/gradle-antlr-sas-plugin
+          slug: flowdigger/gradle-antlr-sas-plugin
 
