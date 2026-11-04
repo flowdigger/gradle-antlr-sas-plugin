@@ -2,17 +2,22 @@
 
 ![Conformance](https://img.shields.io/badge/Conformance-Check--All%20Passing-brightgreen)
 
-[![Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/name.jurgenei.gradle.antlr.sas?label=Plugin%20Portal)](https://plugins.gradle.org/plugin/name.jurgenei.gradle.antlr.sas)
-[![Build and Test](https://github.com/jurgenei/gradle-antlr-sas-plugin/actions/workflows/gradle-build.yml/badge.svg?branch=release%2F0.1.0)](https://github.com/jurgenei/gradle-antlr-sas-plugin/actions/workflows/gradle-build.yml?query=branch%3Arelease%2F0.1.0)
-[![Coverage CI](https://github.com/jurgenei/gradle-antlr-sas-plugin/actions/workflows/coverage.yml/badge.svg?branch=release%2F0.1.0)](https://github.com/jurgenei/gradle-antlr-sas-plugin/actions/workflows/coverage.yml?query=branch%3Arelease%2F0.1.0)
-[![Coverage](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.codecov.io%2Fapi%2Fv2%2Fgithub%2Fjurgenei%2Frepos%2Fgradle-antlr-sas-plugin%2Fcommits%3Fbranch%3Drelease%252F0.1.0&query=%24.results%5B0%5D.totals.coverage&label=coverage&suffix=%25)](https://app.codecov.io/gh/jurgenei/gradle-antlr-sas-plugin?branch=release%2F0.1.0)
+[![Build](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/ci.yml)
+[![Release](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/release.yml)
+[![Coverage CI](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/coverage.yml/badge.svg)](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/coverage.yml)
+[![CodeQL](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/codeql.yml/badge.svg)](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/codeql.yml)
+[![Dependency Check](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/dependency-check.yml/badge.svg)](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/dependency-check.yml)
+[![SpotBugs Security](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/spotbugs-security.yml/badge.svg)](https://github.com/flowdigger/gradle-antlr-sas-plugin/actions/workflows/spotbugs-security.yml)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot)](https://github.com/flowdigger/gradle-antlr-sas-plugin/security/dependabot)
+[![Coverage](https://codecov.io/gh/flowdigger/gradle-antlr-sas-plugin/graph/badge.svg?branch=main)](https://codecov.io/gh/flowdigger/gradle-antlr-sas-plugin?branch=main)
+[![Maven Central](https://img.shields.io/maven-central/v/org.flowdigger.gradle/gradle-antlr-sas-plugin.svg)](https://search.maven.org/artifact/org.flowdigger.gradle/gradle-antlr-sas-plugin)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/java-21+-green.svg)](https://www.oracle.com/java/)
-[![Gradle](https://img.shields.io/badge/gradle-8+-blue.svg)](https://gradle.org/)
+[![Gradle](https://img.shields.io/badge/gradle-9.5+-blue.svg)](https://gradle.org/)
 
 `gradle-antlr-sas-plugin` exposes one plugin id:
 
-- `name.jurgenei.gradle.antlr.sas`
+- `org.flowdigger.gradle.antlr.sas`
 
 One plugin registers three pipelines:
 
@@ -31,7 +36,7 @@ One plugin registers three pipelines:
 ```groovy
 plugins {
     id 'java'
-    id 'name.jurgenei.gradle.antlr.sas'
+    id 'org.flowdigger.gradle.antlr.sas'
 }
 ```
 
@@ -50,14 +55,14 @@ plugins {
 XML AST tasks support S-expression output too (`sasXmlAst`, `caslXmlAst`, `ds2XmlAst`):
 
 ```groovy
-tasks.named('sasXmlAst', name.jurgenei.gradle.antlr.XmlAstSasGradleTask) {
+tasks.named('sasXmlAst', org.flowdigger.gradle.antlr.XmlAstSasGradleTask) {
     targetExtension.set('.xir')
-    xirFormat.set('beautified')
+    outputFormat.set('beautified')
 }
 ```
 
 - `targetExtension`: `.xml` (default) or `.xir`
-- `xirFormat`: `compact` (default) or `beautified`
+- `outputFormat`: `compact` (default) or `beautified`
 
 ## Default Conventions
 
@@ -126,7 +131,7 @@ To add another language pipeline inside this plugin:
 1. Create `XmlAst<Lang>GradleTask extends XmlAstGradleTask`.
 2. Apply defaults with `LanguageTaskDefaults.of(...).applyTo(this)`.
 3. Register task in `SasGrammarPlugin` and wire runtime with `LanguagePluginSupport.wireJavaRuntimeClasspath(...)`.
-4. Add unit test for defaults plus `targetExtension='.xir'` and `xirFormat='beautified'` override.
+4. Add unit test for defaults plus `targetExtension='.xir'` and `outputFormat='beautified'` override.
 
 Not implemented:
 
@@ -140,3 +145,24 @@ Not implemented:
 ```bash
 ./gradlew -p gradle-antlr-sas-plugin clean test jacocoTestReport
 ```
+
+## Release to Maven Central
+
+Set credentials and signing material:
+
+```bash
+export ORG_GRADLE_PROJECT_mavenCentralUsername=...
+export ORG_GRADLE_PROJECT_mavenCentralPassword=...
+export ORG_GRADLE_PROJECT_signingKey=...
+export ORG_GRADLE_PROJECT_signingPassword=...
+export ORG_GRADLE_PROJECT_signingKeyId=...
+```
+
+Build signed Central bundle:
+
+```bash
+./gradlew clean packageCentralBundle
+```
+
+Release workflow (`.github/workflows/release.yml`) uploads bundle to Sonatype Central Publisher API on `v*` tags (or manual dispatch).
+Configure repository secrets: `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `SIGNING_KEY`, `SIGNING_PASSWORD`, `SIGNING_KEY_ID`.

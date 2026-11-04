@@ -1,12 +1,24 @@
 pluginManagement {
-    includeBuild("../gradle-antlr-plugin")
+    def antlrPluginBuild = file('../gradle-antlr-plugin')
+    if (System.getProperty('flowdigger.useLocalAntlrPlugin', 'false').toBoolean() && antlrPluginBuild.isDirectory()) {
+        includeBuild('../gradle-antlr-plugin')
+    }
     repositories {
         gradlePluginPortal()
         mavenCentral()
     }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'org.flowdigger.gradle.antlr') {
+                useModule("org.flowdigger.gradle:gradle-antlr-plugin:${requested.version ?: '1.0.0'}")
+            }
+        }
+    }
 }
 
-includeBuild("../gradle-antlr-plugin")
+def antlrPluginBuild = file('../gradle-antlr-plugin')
+if (System.getProperty('flowdigger.useLocalAntlrPlugin', 'false').toBoolean() && antlrPluginBuild.isDirectory()) {
+    includeBuild('../gradle-antlr-plugin')
+}
 
 rootProject.name = 'gradle-antlr-sas-plugin'
-
