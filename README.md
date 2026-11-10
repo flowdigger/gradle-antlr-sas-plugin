@@ -17,7 +17,7 @@
 
 `gradle-antlr-sas-plugin` exposes one plugin id:
 
-- `org.flowdigger.gradle.antlr.sas`
+- `org.flowdigger.antlr.sas`
 
 One plugin registers three pipelines:
 
@@ -36,7 +36,7 @@ One plugin registers three pipelines:
 ```groovy
 plugins {
     id 'java'
-    id 'org.flowdigger.gradle.antlr.sas'
+    id 'org.flowdigger.antlr.sas'
 }
 ```
 

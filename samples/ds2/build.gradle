@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.flowdigger.gradle.antlr.sas'
+    id 'org.flowdigger.antlr.sas'
 }
 
 tasks.named('ds2XmlAst', org.flowdigger.gradle.antlr.XmlAstDs2GradleTask) {

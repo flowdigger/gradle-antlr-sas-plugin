@@ -62,7 +62,7 @@ public class CaslGrammarPluginFunctionalTest {
                 """
                 plugins {
                     id 'java'
-                    id 'org.flowdigger.gradle.antlr.sas'
+                    id 'org.flowdigger.antlr.sas'
                 }
                 """,
                 StandardCharsets.UTF_8);

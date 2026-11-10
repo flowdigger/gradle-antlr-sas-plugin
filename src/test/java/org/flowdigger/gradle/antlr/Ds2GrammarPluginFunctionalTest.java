@@ -63,7 +63,7 @@ public class Ds2GrammarPluginFunctionalTest {
                 """
                 plugins {
                     id 'java'
-                    id 'org.flowdigger.gradle.antlr.sas'
+                    id 'org.flowdigger.antlr.sas'
                 }
                 """,
                 StandardCharsets.UTF_8);

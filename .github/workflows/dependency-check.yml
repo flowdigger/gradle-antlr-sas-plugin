@@ -9,7 +9,10 @@ on:
 
 jobs:
   dependency-check:
-    uses: flowdigger/github-workflows/.github/workflows/dependency-check.yml@v1.1
+    uses: flowdigger/github-workflows/.github/workflows/dependency-check.yml@main
     secrets: inherit
     with:
       trigger-event: ${{ github.event_name }}
+      upload-reports: true
+      clone-flowdigger-gradle: true
+      flowdigger-gradle-ref: "main"

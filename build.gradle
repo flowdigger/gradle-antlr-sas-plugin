@@ -5,11 +5,12 @@ plugins {
     id 'antlr'
     id 'java-gradle-plugin'
     id 'jacoco'
-    id 'org.flowdigger.gradle.antlr' version '1.0.0'
+    id 'org.flowdigger.antlr' version '1.0.3'
     id 'maven-publish'
-    id 'signing'
-    id 'checkstyle'
+    id 'org.flowdigger.maven-publish'
+        id 'checkstyle'
     id 'org.owasp.dependencycheck' version '13.0.0'
+    id 'org.flowdigger.dependency-check'
     id 'com.github.spotbugs' version '6.1.0'
 }
 
@@ -31,7 +32,7 @@ gradlePlugin {
         website = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
         vcsUrl = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
         sasGrammar {
-            id = 'org.flowdigger.gradle.antlr.sas'
+            id = 'org.flowdigger.antlr.sas'
             implementationClass = 'org.flowdigger.gradle.antlr.SasGrammarPlugin'
             displayName = 'Gradle ANTLR SAS Plugin'
             description = 'Proof-of-concept SAS macro expansion and XML AST generation plugin.'
@@ -54,7 +55,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.flowdigger.gradle:gradle-antlr-plugin:1.0.1'
+    implementation("org.flowdigger.gradle:gradle-antlr-plugin:1.0.3")
     implementation 'org.antlr:antlr4-runtime:4.13.2'
 
     antlr 'org.antlr:antlr4:4.13.2'
@@ -112,38 +113,14 @@ publishing {
     }
 }
 
-signing {
-    def signingKey = providers.gradleProperty('signingKey').orNull
-    def signingPassword = providers.gradleProperty('signingPassword').orNull
-    def signingKeyId = providers.gradleProperty('signingKeyId').orNull
-    if (signingKey && signingPassword) {
-        if (signingKeyId) {
-            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-        } else {
-            useInMemoryPgpKeys(signingKey, signingPassword)
-        }
-    } else {
-        useGpgCmd()
+if (providers.gradleProperty('signingKey').present && providers.gradleProperty('signingPassword').present) {
+    def signPublicationTasks = tasks.matching { it.name.startsWith('sign') && it.name.endsWith('Publication') }
+    tasks.matching { it.name.startsWith('publish') && it.name.endsWith('PublicationToMavenLocal') }.configureEach {
+        dependsOn signPublicationTasks
     }
-    sign publishing.publications
 }
 
 def dependencyCheckSuppression = file('dependency-check-suppressions.xml')
-dependencyCheck {
-    formats = ['HTML', 'JSON', 'XML']
-    failBuildOnCVSS = 7.0
-    if (dependencyCheckSuppression.exists()) {
-        suppressionFile = dependencyCheckSuppression.absolutePath
-    }
-    analyzers {
-        ossIndex {
-            enabled = false
-        }
-    }
-    nvd {
-        apiKey = findProperty('org.owasp.dependencycheck.nvd.api.key') ?: System.getenv('NVD_API_KEY')
-    }
-}
 
 spotbugs {
     toolVersion = spotbugsEngineVersion
