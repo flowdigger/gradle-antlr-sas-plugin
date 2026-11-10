@@ -28,9 +28,9 @@ ext {
 }
 
 gradlePlugin {
+    website = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
+    vcsUrl = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
     plugins {
-        website = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
-        vcsUrl = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
         sasGrammar {
             id = 'org.flowdigger.antlr.sas'
             implementationClass = 'org.flowdigger.gradle.antlr.SasGrammarPlugin'
@@ -66,57 +66,32 @@ dependencies {
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
+    publications.withType(MavenPublication).configureEach {
+        pom {
+            name = 'Gradle ANTLR SAS Plugin'
+            description = 'Gradle plugin for XML AST conversion of SAS sources'
+            url = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
 
-            pom {
-                name = 'Gradle ANTLR SAS Plugin'
-                description = 'Gradle plugin for XML AST conversion of SAS sources'
+            licenses {
+                license {
+                    name = 'MIT License'
+                    url = 'https://opensource.org/licenses/MIT'
+                }
+            }
+
+            developers {
+                developer {
+                    id = 'flowdigger'
+                    name = 'Flowdigger'
+                }
+            }
+
+            scm {
+                connection = 'scm:git:https://github.com/flowdigger/gradle-antlr-sas-plugin.git'
+                developerConnection = 'scm:git:ssh://git@github.com/flowdigger/gradle-antlr-sas-plugin.git'
                 url = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
-
-                licenses {
-                    license {
-                        name = 'MIT License'
-                        url = 'https://opensource.org/licenses/MIT'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id = 'flowdigger'
-                        name = 'Flowdigger'
-                    }
-                }
-
-                scm {
-                    connection = 'scm:git:https://github.com/flowdigger/gradle-antlr-sas-plugin.git'
-                    developerConnection = 'scm:git:ssh://git@github.com/flowdigger/gradle-antlr-sas-plugin.git'
-                    url = 'https://github.com/flowdigger/gradle-antlr-sas-plugin'
-                }
             }
         }
-    }
-
-    repositories {
-        mavenLocal()
-        maven {
-            name = 'sonatype'
-            def releasesRepoUrl = 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
-            def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-            url = uri(version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl)
-            credentials {
-                username = providers.gradleProperty('mavenCentralUsername').orNull
-                password = providers.gradleProperty('mavenCentralPassword').orNull
-            }
-        }
-    }
-}
-
-if (providers.gradleProperty('signingKey').present && providers.gradleProperty('signingPassword').present) {
-    def signPublicationTasks = tasks.matching { it.name.startsWith('sign') && it.name.endsWith('Publication') }
-    tasks.matching { it.name.startsWith('publish') && it.name.endsWith('PublicationToMavenLocal') }.configureEach {
-        dependsOn signPublicationTasks
     }
 }
 
